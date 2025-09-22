@@ -1,6 +1,6 @@
 # Анастасия Мицура - "KoteKapu"
 
-### Группа: 10 - И - 2
+### Группа: 11 - И - 2
 ### Электронная почта: nastamicura2@mail.ru
 ### Tg: anastasiamitsura
 
