@@ -14,6 +14,8 @@
 
 </div>
 
+## ✨ Видео проекта - https://drive.google.com/file/d/1JZ8ikiwEbMYNVkmELrWXWAu3riWPdrZ3/view?usp=drivesdk
+
 ## ✨ Особенности
 
 ### 🎯 Умные рекомендации
