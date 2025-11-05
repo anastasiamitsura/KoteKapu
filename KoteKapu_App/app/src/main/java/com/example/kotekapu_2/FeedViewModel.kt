@@ -36,7 +36,6 @@ class FeedViewModel(
 
                 val token = authManager.getCurrentToken()
                 if (token != null) {
-                    // Используем новый метод с токеном
                     val result = apiService.getRecommendedFeed(
                         token = token,
                         limit = pageSize,
@@ -107,7 +106,6 @@ class FeedViewModel(
                     )
 
                     if (result.isSuccess) {
-                        // Обновляем локальное состояние - увеличиваем счетчик лайков
                         val updatedPosts = _posts.value.map { currentPost ->
                             if (currentPost.id == post.id) {
                                 currentPost.copy(likes = currentPost.likes + 1)
@@ -128,8 +126,6 @@ class FeedViewModel(
     }
 
     private suspend fun updateUserInterests(token: String, userId: Int) {
-        // Можно периодически обновлять интересы пользователя
-        // или просто логировать для отладки
         val interestsResult = apiService.getUserInterests(token, userId)
         if (interestsResult.isSuccess) {
             println("DEBUG: User interests updated")

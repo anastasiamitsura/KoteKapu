@@ -9,43 +9,35 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_settings")
 
-private val _profileCompleted = MutableStateFlow(false)
-val profileCompleted: StateFlow<Boolean> = _profileCompleted
-
-private val _preferencesCompleted = MutableStateFlow(false)
-val preferencesCompleted: StateFlow<Boolean> = _preferencesCompleted
-
 class AuthManager(private val context: Context) {
 
     companion object {
-        private val TOKEN_KEY = stringPreferencesKey("auth_token")
+        private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val IS_LOGGED_IN_KEY = booleanPreferencesKey("is_logged_in")
         private val USER_ID_KEY = stringPreferencesKey("user_id")
     }
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    // StateFlow для наблюдения за состоянием авторизации
+
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
-    private val _authToken = MutableStateFlow<String?>(null)
-    val authToken: StateFlow<String?> = _authToken
+    private val _accessToken = MutableStateFlow<String?>(null)
+    val accessToken: StateFlow<String?> = _accessToken
 
     private val _userId = MutableStateFlow<Int?>(null)
     val userId: StateFlow<Int?> = _userId
 
     init {
-        // Загружаем данные при инициализации в coroutine
+
         loadAuthData()
     }
 
@@ -53,53 +45,56 @@ class AuthManager(private val context: Context) {
         coroutineScope.launch {
             try {
                 val preferences = context.dataStore.data.first()
-                val token = preferences[TOKEN_KEY]
+                val accessToken = preferences[ACCESS_TOKEN_KEY]
                 val isLoggedInValue = preferences[IS_LOGGED_IN_KEY] ?: false
                 val userIdStr = preferences[USER_ID_KEY]
 
-                _authToken.value = token
+                println("DEBUG: Loaded from DataStore - accessToken: $accessToken, isLoggedIn: $isLoggedInValue, userId: $userIdStr")
+
+
+                _accessToken.value = accessToken
                 _isLoggedIn.value = isLoggedInValue
                 _userId.value = userIdStr?.toIntOrNull()
 
-                // TODO: Запросить статус профиля с сервера
-                // Временно устанавливаем значения
-                _profileCompleted.value = true
-                _preferencesCompleted.value = true
+                println("DEBUG: StateFlow updated - accessToken: ${_accessToken.value}, isLoggedIn: ${_isLoggedIn.value}, userId: ${_userId.value}")
+
             } catch (e: Exception) {
                 println("DEBUG: Error loading auth data: ${e.message}")
             }
         }
     }
 
-    // Сохранение данных авторизации
-    suspend fun saveAuthData(token: String, userId: Int) {
+
+    suspend fun saveAuthData(accessToken: String, userId: Int) {
         try {
             context.dataStore.edit { preferences ->
-                preferences[TOKEN_KEY] = token
+                preferences[ACCESS_TOKEN_KEY] = accessToken
                 preferences[IS_LOGGED_IN_KEY] = true
                 preferences[USER_ID_KEY] = userId.toString()
             }
-            // Обновляем StateFlow
-            _authToken.value = token
+
+            _accessToken.value = accessToken
             _isLoggedIn.value = true
             _userId.value = userId
 
-            println("DEBUG: Auth data saved - token: $token, userId: $userId")
+            println("DEBUG: Auth data saved - accessToken: $accessToken, userId: $userId")
+            println("DEBUG: StateFlow after save - accessToken: ${_accessToken.value}, isLoggedIn: ${_isLoggedIn.value}, userId: ${_userId.value}")
+
         } catch (e: Exception) {
             println("DEBUG: Error saving auth data: ${e.message}")
         }
     }
 
-    // Выход
+
     suspend fun logout() {
         try {
             context.dataStore.edit { preferences ->
-                preferences.remove(TOKEN_KEY)
+                preferences.remove(ACCESS_TOKEN_KEY)
                 preferences.remove(IS_LOGGED_IN_KEY)
                 preferences.remove(USER_ID_KEY)
             }
-            // Обновляем StateFlow
-            _authToken.value = null
+
+            _accessToken.value = null
             _isLoggedIn.value = false
             _userId.value = null
 
@@ -109,18 +104,30 @@ class AuthManager(private val context: Context) {
         }
     }
 
-    // Быстрая проверка авторизации (без suspend)
+
     fun isUserLoggedIn(): Boolean {
         return _isLoggedIn.value
     }
 
-    // Получение токена (без suspend)
+
     fun getCurrentToken(): String? {
-        return _authToken.value
+        return _accessToken.value
     }
 
-    // Получение ID пользователя (без suspend)
+
     fun getCurrentUserId(): Int? {
         return _userId.value
+    }
+    fun getCurrentUser(): User? {
+        return if (isLoggedIn.value && userId.value != null) {
+            User(
+                id = userId.value!!,
+                email = "",
+                first_name = "",
+                last_name = ""
+            )
+        } else {
+            null
+        }
     }
 }
