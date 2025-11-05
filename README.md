@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![KoteKapu Banner](https://via.placeholder.com/800x200/4F46E5/FFFFFF?text=KoteKapu+%F0%9F%93%86+%D0%9C%D0%B8%D1%80+%D1%81%D0%BE%D0%B1%D1%8B%D1%82%D0%B8%D0%B9)
 
 **Умное приложение для поиска и участия в мероприятиях**
 
